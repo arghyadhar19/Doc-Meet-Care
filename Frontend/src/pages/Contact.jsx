@@ -1,8 +1,54 @@
-import React from 'react'
+import React, { useRef, useState } from 'react'
 import { assets } from '../assets/assets'
 import { motion } from 'framer-motion'
+import emailjs from '@emailjs/browser'
+import { toast } from 'react-toastify'
 
 const Contact = () => {
+  const form = useRef()
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formData, setFormData] = useState({
+    user_name: '',
+    user_email: '',
+    user_phone: '',
+    message: ''
+  })
+
+  const handleInputChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    })
+  }
+
+  const sendEmail = (e) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+
+    // Replace these with your actual EmailJS credentials
+    const serviceId = 'YOUR_SERVICE_ID'
+    const templateId = 'YOUR_TEMPLATE_ID'
+    const publicKey = 'YOUR_PUBLIC_KEY'
+
+    emailjs.sendForm(serviceId, templateId, form.current, publicKey)
+      .then((result) => {
+        console.log('SUCCESS!', result.text)
+        toast.success('Message sent successfully! We will get back to you soon.')
+        setFormData({
+          user_name: '',
+          user_email: '',
+          user_phone: '',
+          message: ''
+        })
+      }, (error) => {
+        console.log('FAILED...', error.text)
+        toast.error('Failed to send message. Please try again.')
+      })
+      .finally(() => {
+        setIsSubmitting(false)
+      })
+  }
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -176,30 +222,40 @@ const Contact = () => {
         </motion.h2>
         
         <motion.form 
+          ref={form}
+          onSubmit={sendEmail}
           variants={containerVariants}
           className='max-w-lg mx-auto space-y-6'
         >
           <motion.div variants={itemVariants}>
             <label className='block text-sm font-medium text-gray-700 mb-2'>
-              Full Name
+              Full Name *
             </label>
             <motion.input
               whileFocus={{ scale: 1.02, borderColor: '#5de1e7' }}
               type='text'
+              name='user_name'
+              value={formData.user_name}
+              onChange={handleInputChange}
               className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary transition-all duration-300'
               placeholder='Enter your full name'
+              required
             />
           </motion.div>
           
           <motion.div variants={itemVariants}>
             <label className='block text-sm font-medium text-gray-700 mb-2'>
-              Email Address
+              Email Address *
             </label>
             <motion.input
               whileFocus={{ scale: 1.02, borderColor: '#5de1e7' }}
               type='email'
+              name='user_email'
+              value={formData.user_email}
+              onChange={handleInputChange}
               className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary transition-all duration-300'
               placeholder='Enter your email'
+              required
             />
           </motion.div>
           
@@ -210,6 +266,9 @@ const Contact = () => {
             <motion.input
               whileFocus={{ scale: 1.02, borderColor: '#5de1e7' }}
               type='tel'
+              name='user_phone'
+              value={formData.user_phone}
+              onChange={handleInputChange}
               className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary transition-all duration-300'
               placeholder='Enter your phone number'
             />
@@ -217,13 +276,17 @@ const Contact = () => {
           
           <motion.div variants={itemVariants}>
             <label className='block text-sm font-medium text-gray-700 mb-2'>
-              Message
+              Message *
             </label>
             <motion.textarea
               whileFocus={{ scale: 1.02, borderColor: '#5de1e7' }}
               rows={5}
+              name='message'
+              value={formData.message}
+              onChange={handleInputChange}
               className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary transition-all duration-300 resize-none'
               placeholder='Tell us how we can help you...'
+              required
             />
           </motion.div>
           
@@ -235,9 +298,17 @@ const Contact = () => {
             }}
             whileTap={{ scale: 0.95 }}
             type='submit'
-            className='w-full bg-primary text-white py-3 rounded-lg font-medium hover:bg-primary/90 transition-all duration-300'
+            disabled={isSubmitting}
+            className='w-full bg-primary text-white py-3 rounded-lg font-medium hover:bg-primary/90 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed'
           >
-            Send Message
+            {isSubmitting ? (
+              <div className='flex items-center justify-center'>
+                <div className='w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2'></div>
+                Sending...
+              </div>
+            ) : (
+              'Send Message'
+            )}
           </motion.button>
         </motion.form>
       </motion.div>

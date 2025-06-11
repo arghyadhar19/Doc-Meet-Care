@@ -130,6 +130,29 @@ const updateProfile = async (req, res) => {
     }
 }
 
+// API to delete user profile
+const deleteUserProfile = async (req, res) => {
+    try {
+        const { userId } = req.body;
+        const user = await userModel.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        // Delete all associated appointments
+        await appointmentModel.deleteMany({ userId });
+
+        // Delete user profile
+        await userModel.findByIdAndDelete(userId);
+
+        res.json({ success: true, message: "Profile deleted successfully" });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 // API to book appointment 
 const bookAppointment = async (req, res) => {
 
@@ -348,6 +371,7 @@ export {
     registerUser,
     getProfile,
     updateProfile,
+    deleteUserProfile,
     bookAppointment,
     listAppointment,
     cancelAppointment,
