@@ -114,8 +114,17 @@ const doctorProfile = async (req, res) => {
 // API to update doctor profile data from doctor panel
 const updateDoctorProfile = async (req, res) => {
     try {
-        const { docId, fees, address, available } = req.body;
-        await doctorModel.findByIdAndUpdate(docId, { fees, address, available });
+        const { docId, fees, address, available, about } = req.body;
+        
+        // Create update object with all fields that can be updated
+        const updateData = {};
+        
+        if (fees !== undefined) updateData.fees = fees;
+        if (address !== undefined) updateData.address = address;
+        if (available !== undefined) updateData.available = available;
+        if (about !== undefined) updateData.about = about;
+        
+        await doctorModel.findByIdAndUpdate(docId, updateData);
         res.json({ success: true, message: 'Profile Updated' });
     } catch (error) {
         console.log(error);
