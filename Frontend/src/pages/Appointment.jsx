@@ -26,6 +26,7 @@ const Appointment = () => {
     }
 
     const getAvailableSolts = async () => {
+        if (!docInfo || !docInfo.slots_booked) return;
 
         setDocSlots([])
 
@@ -93,6 +94,11 @@ const Appointment = () => {
             return navigate('/login')
         }
 
+        if (!docSlots[slotIndex] || !docSlots[slotIndex][0]) {
+            toast.error('Please select a valid time slot')
+            return
+        }
+
         const date = docSlots[slotIndex][0].datetime
 
         let day = date.getDate()
@@ -126,7 +132,7 @@ const Appointment = () => {
     }, [doctors, docId])
 
     useEffect(() => {
-        if (docInfo) {
+        if (docInfo && docInfo.slots_booked) {
             getAvailableSolts()
         }
     }, [docInfo])
@@ -174,7 +180,25 @@ const Appointment = () => {
         }
     }
 
-    return docInfo ? (
+    // Show loading state while doctors are being fetched or docInfo is not available
+    if (!doctors.length || !docInfo) {
+        return (
+            <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className='min-h-[60vh] flex items-center justify-center'
+            >
+                <motion.div 
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    className="w-16 h-16 border-4 border-gray-300 border-t-4 border-t-primary rounded-full"
+                />
+                <p className='ml-4 text-gray-600'>Loading doctor information...</p>
+            </motion.div>
+        )
+    }
+
+    return (
         <motion.div
             variants={containerVariants}
             initial="hidden"
@@ -283,7 +307,7 @@ const Appointment = () => {
                     className='flex gap-3 items-center w-full overflow-x-scroll mt-4'
                 >
                     <AnimatePresence>
-                        {docSlots.length && docSlots.map((item, index) => (
+                        {docSlots.length > 0 && docSlots.map((item, index) => (
                             <motion.div 
                                 key={index}
                                 variants={slotVariants}
@@ -309,7 +333,7 @@ const Appointment = () => {
                     className='flex items-center gap-3 w-full overflow-x-scroll mt-4'
                 >
                     <AnimatePresence>
-                        {docSlots.length && docSlots[slotIndex].map((item, index) => (
+                        {docSlots.length > 0 && docSlots[slotIndex] && docSlots[slotIndex].map((item, index) => (
                             <motion.p 
                                 key={index}
                                 variants={slotVariants}
@@ -348,18 +372,6 @@ const Appointment = () => {
             >
                 <RelatedDoctors speciality={docInfo.speciality} docId={docId} />
             </motion.div>
-        </motion.div>
-    ) : (
-        <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className='min-h-[60vh] flex items-center justify-center'
-        >
-            <motion.div 
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                className="w-16 h-16 border-4 border-gray-300 border-t-4 border-t-primary rounded-full"
-            />
         </motion.div>
     )
 }
